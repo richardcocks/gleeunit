@@ -7,3 +7,13 @@ export function rescue(f) {
     return new Error(e);
   }
 }
+
+export function suppress_output(f) {
+  const oldWrite = process.stdout.write;
+  process.stdout.write = () => true;
+  try {
+    return f();
+  } finally {
+    process.stdout.write = oldWrite;
+  }
+}
