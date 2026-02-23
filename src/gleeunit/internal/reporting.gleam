@@ -9,11 +9,25 @@ import gleam/string
 import gleeunit/internal/gleam_panic.{type GleamPanic}
 
 pub type State {
-  State(passed: Int, failed: Int, skipped: Int, todos: Int)
+  State(
+    passed: Int,
+    failed: Int,
+    skipped: Int,
+    todos: Int,
+    todo_entries: List(String),
+    failure_entries: List(String),
+  )
 }
 
 pub fn new_state() -> State {
-  State(passed: 0, failed: 0, skipped: 0, todos: 0)
+  State(
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    todos: 0,
+    todo_entries: [],
+    failure_entries: [],
+  )
 }
 
 pub fn finished(state: State) -> Int {
@@ -26,8 +40,10 @@ pub fn finished(state: State) -> Int {
     n -> ", " <> int.to_string(n) <> " skipped"
   }
 
+  print_summary(state)
+
   case state {
-    State(passed: 0, failed: 0, skipped: 0, todos: 0) -> {
+    State(passed: 0, failed: 0, skipped: 0, todos: 0, ..) -> {
       io.println("\nNo tests found!")
       1
     }
@@ -62,6 +78,25 @@ pub fn finished(state: State) -> Int {
   }
 }
 
+fn print_summary(state: State) -> Nil {
+  case state.todo_entries {
+    [] -> Nil
+    entries -> {
+      io.println("\n" <> yellow("Todo:"))
+      list.reverse(entries)
+      |> list.each(fn(entry) { io.println("  - " <> entry) })
+    }
+  }
+  case state.failure_entries {
+    [] -> Nil
+    entries -> {
+      io.println("\n" <> red("Failures:"))
+      list.reverse(entries)
+      |> list.each(fn(entry) { io.println("  - " <> entry) })
+    }
+  }
+}
+
 pub fn test_passed(state: State) -> State {
   io.print(green("."))
   State(..state, passed: state.passed + 1)
@@ -78,18 +113,49 @@ pub fn test_failed(
       let src = option.from_result(read_file(e.file))
       let message = format_gleam_error(e, module, function, src)
       io.print("\n" <> message)
-      State(..state, todos: state.todos + 1)
+      let entry =
+        module
+        <> "."
+        <> function
+        <> " ("
+        <> e.file
+        <> ":"
+        <> int.to_string(e.line)
+        <> ")"
+      State(
+        ..state,
+        todos: state.todos + 1,
+        todo_entries: [entry, ..state.todo_entries],
+      )
     }
     Ok(e) -> {
       let src = option.from_result(read_file(e.file))
       let message = format_gleam_error(e, module, function, src)
       io.print("\n" <> message)
-      State(..state, failed: state.failed + 1)
+      let entry =
+        module
+        <> "."
+        <> function
+        <> " ("
+        <> e.file
+        <> ":"
+        <> int.to_string(e.line)
+        <> ")"
+      State(
+        ..state,
+        failed: state.failed + 1,
+        failure_entries: [entry, ..state.failure_entries],
+      )
     }
     Error(_) -> {
       let message = format_unknown(module, function, error)
       io.print("\n" <> message)
-      State(..state, failed: state.failed + 1)
+      let entry = module <> "." <> function
+      State(
+        ..state,
+        failed: state.failed + 1,
+        failure_entries: [entry, ..state.failure_entries],
+      )
     }
   }
 }
