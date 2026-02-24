@@ -7,12 +7,16 @@ find_files(Pattern, In) ->
   lists:map(fun list_to_binary/1, Results).
 
 run_eunit(Tests, Options) ->
+    FullOptions = case os:getenv("GLEEUNIT_REPORT_DIR") of
+        false -> Options;
+        Dir -> Options ++ [{report, {eunit_surefire, [{dir, Dir}]}}]
+    end,
     case code:which(eunit) of
         non_existing ->
             gleeunit@internal@reporting:eunit_missing();
 
-        _ -> 
-            case eunit:test(Tests, Options) of
+        _ ->
+            case eunit:test(Tests, FullOptions) of
                 ok -> {ok, nil};
                 error -> {error, nil};
                 {error, Term} -> {error, Term}
