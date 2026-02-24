@@ -17,6 +17,7 @@ pub type State {
     todo_entries: List(String),
     failure_entries: List(String),
     todo_ids: List(String),
+    report_dir: Option(String),
   )
 }
 
@@ -29,7 +30,28 @@ pub fn new_state() -> State {
     todo_entries: [],
     failure_entries: [],
     todo_ids: [],
+    report_dir: option.None,
   )
+}
+
+pub fn new_state_with_report_dir(report_dir: Option(String)) -> State {
+  State(
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    todos: 0,
+    todo_entries: [],
+    failure_entries: [],
+    todo_ids: [],
+    report_dir: report_dir,
+  )
+}
+
+pub fn maybe_write_todos(state: State) -> Nil {
+  case state.report_dir {
+    option.Some(dir) -> write_todos_report(state, dir)
+    option.None -> Nil
+  }
 }
 
 pub fn finished(state: State) -> Int {

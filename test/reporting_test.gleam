@@ -1,4 +1,5 @@
 import gleam/dynamic
+import gleam/option
 import gleam/string
 import gleeunit/internal/reporting
 import testhelper
@@ -45,6 +46,7 @@ pub fn finished_returns_1_when_todos_present_test() {
       todo_entries: [],
       failure_entries: [],
       todo_ids: [],
+      report_dir: option.None,
     )
   let exit_code = suppress_output(fn() { reporting.finished(state) })
   assert exit_code == 1
@@ -60,6 +62,7 @@ pub fn finished_returns_0_when_no_todos_or_failures_test() {
       todo_entries: [],
       failure_entries: [],
       todo_ids: [],
+      report_dir: option.None,
     )
   let exit_code = suppress_output(fn() { reporting.finished(state) })
   assert exit_code == 0

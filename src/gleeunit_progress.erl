@@ -17,8 +17,11 @@ start() ->
 start(Options) ->
     eunit_listener:start(?MODULE, Options).
 
-init(_Options) ->
-    ?reporting:new_state().
+init(Options) ->
+    case proplists:get_value(report_dir, Options) of
+        undefined -> ?reporting:new_state();
+        Dir -> ?reporting:new_state_with_report_dir({some, Dir})
+    end.
 
 handle_begin(_test_or_group, _data, State) ->
     State.
@@ -51,10 +54,7 @@ handle_cancel(_test_or_group, Data, State) ->
     ?reporting:test_failed(State, <<"gleeunit">>, <<"main">>, Data).
 
 terminate({ok, _Data}, State) ->
-    case os:getenv("GLEEUNIT_REPORT_DIR") of
-        false -> ok;
-        Dir -> ?reporting:write_todos_report(State, unicode:characters_to_binary(Dir))
-    end,
+    ?reporting:maybe_write_todos(State),
     ?reporting:finished(State),
     ok;
 terminate({error, Reason}, State) ->
