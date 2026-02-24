@@ -51,6 +51,10 @@ handle_cancel(_test_or_group, Data, State) ->
     ?reporting:test_failed(State, <<"gleeunit">>, <<"main">>, Data).
 
 terminate({ok, _Data}, State) ->
+    case os:getenv("GLEEUNIT_REPORT_DIR") of
+        false -> ok;
+        Dir -> ?reporting:write_todos_report(State, unicode:characters_to_binary(Dir))
+    end,
     ?reporting:finished(State),
     ok;
 terminate({error, Reason}, State) ->

@@ -16,6 +16,7 @@ pub type State {
     todos: Int,
     todo_entries: List(String),
     failure_entries: List(String),
+    todo_ids: List(String),
   )
 }
 
@@ -27,6 +28,7 @@ pub fn new_state() -> State {
     todos: 0,
     todo_entries: [],
     failure_entries: [],
+    todo_ids: [],
   )
 }
 
@@ -122,10 +124,12 @@ pub fn test_failed(
         <> ":"
         <> int.to_string(e.line)
         <> ")"
+      let todo_id = module <> ":" <> function
       State(
         ..state,
         todos: state.todos + 1,
         todo_entries: [entry, ..state.todo_entries],
+        todo_ids: [todo_id, ..state.todo_ids],
       )
     }
     Ok(e) -> {
@@ -301,6 +305,24 @@ fn red(text: String) -> String {
 fn grey(text: String) -> String {
   "\u{001b}[90m" <> text <> "\u{001b}[39m"
 }
+
+pub fn write_todos_report(state: State, dir: String) -> Nil {
+  case state.todo_ids {
+    [] -> Nil
+    ids -> {
+      let content = ids |> list.reverse |> string.join("\n")
+      let filepath = join_path(dir, "todos.txt")
+      let _ = write_file(filepath, content)
+      Nil
+    }
+  }
+}
+
+@external(erlang, "filename", "join")
+fn join_path(dir: String, file: String) -> String
+
+@external(erlang, "file", "write_file")
+fn write_file(path: String, content: String) -> Result(Nil, dynamic.Dynamic)
 
 @external(erlang, "file", "read_file")
 fn read_file(path: String) -> Result(BitArray, dynamic.Dynamic) {

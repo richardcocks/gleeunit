@@ -44,6 +44,7 @@ pub fn finished_returns_1_when_todos_present_test() {
       todos: 2,
       todo_entries: [],
       failure_entries: [],
+      todo_ids: [],
     )
   let exit_code = suppress_output(fn() { reporting.finished(state) })
   assert exit_code == 1
@@ -58,6 +59,7 @@ pub fn finished_returns_0_when_no_todos_or_failures_test() {
       todos: 0,
       todo_entries: [],
       failure_entries: [],
+      todo_ids: [],
     )
   let exit_code = suppress_output(fn() { reporting.finished(state) })
   assert exit_code == 0
