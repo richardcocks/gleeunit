@@ -47,8 +47,25 @@ fn resolve_report_dir(options: List(GleeunitOption)) -> Option(String) {
 @external(erlang, "gleeunit_ffi", "get_cli_report_dir")
 fn get_cli_report_dir() -> Option(String)
 
+@external(erlang, "gleeunit_ffi", "has_cli_help_flag")
+fn has_cli_help_flag() -> Bool
+
 @external(javascript, "./gleeunit_ffi.mjs", "main")
 fn do_main(report_dir: Option(String)) -> Nil {
+  case has_cli_help_flag() {
+    True -> {
+      io.println("gleeunit test runner")
+      io.println("")
+      io.println("Usage: gleam test [-- [OPTIONS]]")
+      io.println("")
+      io.println("Options:")
+      io.println("      --report-dir <DIR>  Write Surefire XML and todo reports to DIR")
+      io.println("  -h, --help              Print this help message")
+      halt(0)
+    }
+    False -> Nil
+  }
+
   case report_dir {
     Some(dir) -> io.println("Report dir: " <> dir)
     None -> Nil

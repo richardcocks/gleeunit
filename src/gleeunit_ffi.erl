@@ -1,6 +1,6 @@
 -module(gleeunit_ffi).
 
--export([find_files/2, run_eunit/3, get_cli_report_dir/0]).
+-export([find_files/2, run_eunit/3, get_cli_report_dir/0, has_cli_help_flag/0]).
 
 find_files(Pattern, In) ->
   Results = filelib:wildcard(binary_to_list(Pattern), binary_to_list(In)),
@@ -15,6 +15,10 @@ get_cli_report_dir([_ | Rest]) ->
     get_cli_report_dir(Rest);
 get_cli_report_dir([]) ->
     none.
+
+has_cli_help_flag() ->
+    lists:member("--help", init:get_plain_arguments())
+    orelse lists:member("-h", init:get_plain_arguments()).
 
 run_eunit(Tests, Options, ReportDir) ->
     FullOptions = case ReportDir of
