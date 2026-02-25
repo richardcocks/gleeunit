@@ -1,5 +1,5 @@
 -module(gleeunit_test_ffi).
--export([rescue/1, suppress_output/1]).
+-export([rescue/1, suppress_output/1, make_temp_dir/0, read_file_text/1]).
 
 rescue(F) ->
     try
@@ -25,4 +25,16 @@ suppress_output(F) ->
         group_leader(OldGL, self()),
         unlink(Sink),
         exit(Sink, normal)
+    end.
+
+make_temp_dir() ->
+    TmpBase = filename:basedir(user_cache, "gleeunit_test"),
+    Dir = filename:join(TmpBase, integer_to_list(erlang:unique_integer([positive]))),
+    ok = filelib:ensure_dir(filename:join(Dir, "dummy")),
+    list_to_binary(Dir).
+
+read_file_text(Path) ->
+    case file:read_file(Path) of
+        {ok, Bin} -> {ok, Bin};
+        {error, Reason} -> {error, Reason}
     end.
