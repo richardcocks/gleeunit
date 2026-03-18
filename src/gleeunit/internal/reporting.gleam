@@ -17,15 +17,6 @@ pub fn new_state() -> State {
 }
 
 pub fn finished(state: State) -> Int {
-  let todo_suffix = case state.todos {
-    0 -> ""
-    n -> ", " <> int.to_string(n) <> " todo"
-  }
-  let skipped_suffix = case state.skipped {
-    0 -> ""
-    n -> ", " <> int.to_string(n) <> " skipped"
-  }
-
   case state {
     State(passed: 0, failed: 0, skipped: 0, todos: 0) -> {
       io.println("\nNo tests found!")
@@ -42,8 +33,7 @@ pub fn finished(state: State) -> Int {
         "\n"
         <> int.to_string(state.passed)
         <> " passed, 0 failures"
-        <> todo_suffix
-        <> skipped_suffix
+        <> suffix(state)
       io.println(yellow(message))
       1
     }
@@ -54,12 +44,23 @@ pub fn finished(state: State) -> Int {
         <> " passed, "
         <> int.to_string(state.failed)
         <> " failures"
-        <> todo_suffix
-        <> skipped_suffix
+        <> suffix(state)
       io.println(red(message))
       1
     }
   }
+}
+
+fn suffix(state: State) -> String {
+  let todo_part = case state.todos {
+    0 -> ""
+    n -> ", " <> int.to_string(n) <> " todo"
+  }
+  let skipped_part = case state.skipped {
+    0 -> ""
+    n -> ", " <> int.to_string(n) <> " skipped"
+  }
+  todo_part <> skipped_part
 }
 
 pub fn test_passed(state: State) -> State {
