@@ -37,24 +37,25 @@ handle_end(test, Data, State) ->
         Out -> gleam@io:print(Out)
     end,
 
+    Print = fun gleam@io:print/1,
     case proplists:get_value(status, Data) of
         ok ->
-            ?reporting:test_passed(State);
+            ?reporting:test_passed(State, Print);
         {skipped, _Reason} ->
-            ?reporting:test_skipped(State, Module, Function);
+            ?reporting:test_skipped(State, Module, Function, Print);
         {error, {_, Exception, _Stack}} ->
-            ?reporting:test_failed(State, Module, Function, Exception)
+            ?reporting:test_failed(State, Module, Function, Exception, Print)
     end.
 
 
 handle_cancel(_test_or_group, Data, State) ->
-    ?reporting:test_failed(State, <<"gleeunit">>, <<"main">>, Data).
+    ?reporting:test_failed(State, <<"gleeunit">>, <<"main">>, Data, fun gleam@io:print/1).
 
 terminate({ok, _Data}, State) ->
-    ?reporting:finished(State),
+    ?reporting:finished(State, fun gleam@io:print/1),
     ok;
 terminate({error, Reason}, State) ->
-    ?reporting:finished(State),
+    ?reporting:finished(State, fun gleam@io:print/1),
     io:fwrite("
 Eunit failed:
 

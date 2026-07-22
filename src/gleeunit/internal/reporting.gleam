@@ -16,16 +16,16 @@ pub fn new_state() -> State {
   State(passed: 0, failed: 0, skipped: 0, todos: 0)
 }
 
-pub fn finished(state: State) -> Int {
+pub fn finished(state: State, print: fn(String) -> Nil) -> Int {
   case state {
     State(passed: 0, failed: 0, skipped: 0, todos: 0) -> {
-      io.println("\nNo tests found!")
+      print("\nNo tests found!\n")
       1
     }
     State(failed: 0, skipped: 0, todos: 0, ..) -> {
       let message =
         "\n" <> int.to_string(state.passed) <> " passed, no failures"
-      io.println(green(message))
+      print(green(message) <> "\n")
       0
     }
     State(failed: 0, ..) -> {
@@ -34,7 +34,7 @@ pub fn finished(state: State) -> Int {
         <> int.to_string(state.passed)
         <> " passed, 0 failures"
         <> suffix(state)
-      io.println(yellow(message))
+      print(yellow(message) <> "\n")
       1
     }
     State(..) -> {
@@ -45,7 +45,7 @@ pub fn finished(state: State) -> Int {
         <> int.to_string(state.failed)
         <> " failures"
         <> suffix(state)
-      io.println(red(message))
+      print(red(message) <> "\n")
       1
     }
   }
@@ -63,8 +63,8 @@ fn suffix(state: State) -> String {
   todo_part <> skipped_part
 }
 
-pub fn test_passed(state: State) -> State {
-  io.print(green("."))
+pub fn test_passed(state: State, print: fn(String) -> Nil) -> State {
+  print(green("."))
   State(..state, passed: state.passed + 1)
 }
 
@@ -73,23 +73,22 @@ pub fn test_failed(
   module: String,
   function: String,
   error: dynamic.Dynamic,
+  print: fn(String) -> Nil,
 ) -> State {
   case gleam_panic.from_dynamic(error) {
-    Ok(gleam_panic.GleamPanic(kind: gleam_panic.Todo, ..) as e) -> {
-      let src = option.from_result(read_file(e.file))
-      let message = format_gleam_error(e, module, function, src)
-      io.print("\n" <> message)
+    Ok(gleam_panic.GleamPanic(kind: gleam_panic.Todo, ..)) -> {
+      print(yellow("."))
       State(..state, todos: state.todos + 1)
     }
     Ok(e) -> {
       let src = option.from_result(read_file(e.file))
       let message = format_gleam_error(e, module, function, src)
-      io.print("\n" <> message)
+      print("\n" <> message)
       State(..state, failed: state.failed + 1)
     }
     Error(_) -> {
       let message = format_unknown(module, function, error)
-      io.print("\n" <> message)
+      print("\n" <> message)
       State(..state, failed: state.failed + 1)
     }
   }
@@ -208,8 +207,13 @@ fn code_snippet(src: Option(BitArray), start: Int, end: Int) -> String {
   |> result.unwrap("")
 }
 
-pub fn test_skipped(state: State, module: String, function: String) -> State {
-  io.print("\n" <> module <> "." <> function <> yellow(" skipped"))
+pub fn test_skipped(
+  state: State,
+  module: String,
+  function: String,
+  print: fn(String) -> Nil,
+) -> State {
+  print("\n" <> module <> "." <> function <> yellow(" skipped"))
   State(..state, skipped: state.skipped + 1)
 }
 
